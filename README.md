@@ -1,5 +1,9 @@
 # GenAction — A Cost-Aware Create-or-Reuse Decision Agent for LLM Response Systems
 
+[![CI](https://github.com/bobaoxu2001/GenAction-Cost-Aware-Create-or-Reuse-Decision-Agent-for-LLM-Response-Systems/actions/workflows/ci.yml/badge.svg)](https://github.com/bobaoxu2001/GenAction-Cost-Aware-Create-or-Reuse-Decision-Agent-for-LLM-Response-Systems/actions/workflows/ci.yml)
+[![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](#license)
+
 > An online decision agent that, for each incoming user query, decides whether to **reuse** a stored response (cheap, but risks a mismatch) or pay a fixed cost to **create** a new, reusable response — and learns to make that trade-off well.
 
 This is a small **research prototype**, inspired by Jianyu Xu's research direction
