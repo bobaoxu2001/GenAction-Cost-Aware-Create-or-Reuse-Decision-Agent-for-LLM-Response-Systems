@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "genaction"
+version = "0.1.0"
+description = "Cost-aware create-or-reuse decision agent for LLM response systems (research prototype)."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "GenAction project" }]
+keywords = [
+    "online-learning",
+    "sequential-decision-making",
+    "create-or-reuse",
+    "generative-action-sets",
+    "llm",
+]
+dependencies = [
+    "numpy>=1.23",
+    "pandas>=1.5",
+    "scikit-learn>=1.1",
+    "matplotlib>=3.5",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+demo = ["streamlit>=1.20"]
+embeddings = ["sentence-transformers>=2.2"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

@@ -1,0 +1,14 @@
+# Core dependencies (everything needed to run experiments, plots and tests)
+numpy>=1.23
+pandas>=1.5
+scikit-learn>=1.1
+matplotlib>=3.5
+pytest>=7.0
+
+# ----------------------------------------------------------------------------
+# Optional extras (not required; the project runs fully offline without them):
+#
+#   streamlit>=1.20            # interactive demo:  app/streamlit_demo.py
+#   sentence-transformers>=2.2 # stronger embeddings (auto-detected if present)
+#   jupyter>=1.0               # to open the notebooks under notebooks/
+# ----------------------------------------------------------------------------

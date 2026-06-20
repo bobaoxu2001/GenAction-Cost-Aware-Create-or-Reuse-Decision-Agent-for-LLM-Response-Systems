@@ -1,0 +1,67 @@
+query_id,category,query_text,gold_response
+Q001,sales_followup,Can someone follow up with me about the enterprise plan?,Absolutely. I'll have an account executive reach out within one business day to discuss enterprise options and next steps.
+Q002,account_login,I am unable to log into my account today.,"Please try resetting your password with the Forgot Password link. If you still cannot log in, clear your browser cache or contact us to unlock the account."
+Q003,troubleshooting,Why is my dashboard not loading data?,"Try refreshing the page and clearing the cache. If the dashboard is still blank, check your network connection and any active filters that might hide your data."
+Q004,account_login,"I cannot log into my account, please help.","Please try resetting your password with the Forgot Password link. If you still cannot log in, clear your browser cache or contact us to unlock the account."
+Q005,crm_update,"Update the contact record with new details, please.","Sure, I've updated the contact record with the new details. Please allow a few minutes for it to sync across the system."
+Q006,onboarding,What do I do to get started after I sign up?,"Welcome aboard! Start by completing your profile, inviting teammates, and following the in-app setup checklist to configure your workspace."
+Q007,meeting_summary,Please list the action items from our meeting.,"Action items: 1) Send the revised proposal by Friday, 2) Schedule a follow-up call next week, 3) Share the onboarding docs with the team."
+Q008,troubleshooting,Why does the app keep crashing when I open it?,"Please update to the latest version, restart your device, and reinstall the app if crashes continue. Sharing the error log helps us diagnose faster."
+Q009,sales_followup,Can you send me a quote for enterprise seats?,"Of course. I'll prepare a formal quote for your seat count and email it to you today, including volume discounts."
+Q010,billing,"I was charged twice for my subscription this month, why?",It looks like a duplicate charge may have occurred. We'll review your billing history and refund any duplicate payment within 5 to 7 business days.
+Q011,meeting_summary,Can you summarize the meeting notes?,"Here's a summary: we reviewed the project timeline, agreed on the next milestones, and assigned owners for each task. Let me know if I missed anything."
+Q012,refund,I want to request a refund for my recent order.,"We're sorry to hear that. Open Orders, select the order, and choose Request Refund. Refunds are processed within 5 to 7 business days."
+Q013,billing,I need to update my billing card to a new one.,"You can update your payment method under Settings > Billing > Payment Methods, where you can add or replace your card."
+Q014,sales_followup,Can I get a quote for enterprise seats?,"Of course. I'll prepare a formal quote for your seat count and email it to you today, including volume discounts."
+Q015,pricing,How much per month is the Pro plan?,"The Pro plan is $29 per user per month billed monthly, or $290 per user per year when billed annually."
+Q016,subscription_cancel,I want to pause my subscription temporarily.,"Yes, you can pause your subscription for up to 3 months under Settings > Subscription > Pause. Billing stops while paused and resumes automatically."
+Q017,crm_update,Can you log a note on our account?,Done. I've logged a note on your account recording today's conversation with a timestamp.
+Q018,pricing,How do the Basic and Pro plans differ?,"Basic covers core features for small teams, while Pro adds advanced analytics, integrations, and priority support."
+Q019,crm_update,Please add and log a note on our account.,Done. I've logged a note on your account recording today's conversation with a timestamp.
+Q020,account_login,I need to reset my forgotten password.,"Click Forgot Password on the login page, enter your email, and follow the secure reset link we send you."
+Q021,subscription_cancel,Can I pause my subscription for a while?,"Yes, you can pause your subscription for up to 3 months under Settings > Subscription > Pause. Billing stops while paused and resumes automatically."
+Q022,meeting_summary,Can you share the action items from the meeting?,"Action items: 1) Send the revised proposal by Friday, 2) Schedule a follow-up call next week, 3) Share the onboarding docs with the team."
+Q023,subscription_cancel,How can I cancel my subscription?,You can cancel anytime under Settings > Subscription > Cancel Plan. Your access remains active until the end of the current billing period.
+Q024,onboarding,How do I invite teammates to the workspace?,"Open Settings > Members > Invite, enter their email addresses, and assign roles. They will receive an invite link by email."
+Q025,pricing,How much does the Pro plan cost per month?,"The Pro plan is $29 per user per month billed monthly, or $290 per user per year when billed annually."
+Q026,sales_followup,Please have a sales rep follow up about the enterprise plan.,Absolutely. I'll have an account executive reach out within one business day to discuss enterprise options and next steps.
+Q027,meeting_summary,What action items came out of the meeting?,"Action items: 1) Send the revised proposal by Friday, 2) Schedule a follow-up call next week, 3) Share the onboarding docs with the team."
+Q028,crm_update,I need to update our contact record.,"Sure, I've updated the contact record with the new details. Please allow a few minutes for it to sync across the system."
+Q029,onboarding,How do I get started once I sign up?,"Welcome aboard! Start by completing your profile, inviting teammates, and following the in-app setup checklist to configure your workspace."
+Q030,crm_update,Log a note on our account that we spoke today.,Done. I've logged a note on your account recording today's conversation with a timestamp.
+Q031,sales_followup,I need a quote for enterprise seats.,"Of course. I'll prepare a formal quote for your seat count and email it to you today, including volume discounts."
+Q032,billing,Why was I charged twice on my subscription this month?,It looks like a duplicate charge may have occurred. We'll review your billing history and refund any duplicate payment within 5 to 7 business days.
+Q033,refund,Are digital downloads eligible for a refund?,Digital products can be refunded within 14 days of purchase if they have not been substantially downloaded or used.
+Q034,billing,How do I update the card used for billing?,"You can update your payment method under Settings > Billing > Payment Methods, where you can add or replace your card."
+Q035,sales_followup,Can you follow up with me on enterprise pricing?,Absolutely. I'll have an account executive reach out within one business day to discuss enterprise options and next steps.
+Q036,subscription_cancel,How do I pause my subscription?,"Yes, you can pause your subscription for up to 3 months under Settings > Subscription > Pause. Billing stops while paused and resumes automatically."
+Q037,sales_followup,Please send a quote for 50 enterprise seats.,"Of course. I'll prepare a formal quote for your seat count and email it to you today, including volume discounts."
+Q038,crm_update,Please log a note on our account about today's call.,Done. I've logged a note on your account recording today's conversation with a timestamp.
+Q039,account_login,How do I reset my password?,"Click Forgot Password on the login page, enter your email, and follow the secure reset link we send you."
+Q040,meeting_summary,Please summarize the meeting for me.,"Here's a summary: we reviewed the project timeline, agreed on the next milestones, and assigned owners for each task. Let me know if I missed anything."
+Q041,crm_update,Please update the contact record on our account.,"Sure, I've updated the contact record with the new details. Please allow a few minutes for it to sync across the system."
+Q042,troubleshooting,"My app keeps crashing on startup, how do I fix it?","Please update to the latest version, restart your device, and reinstall the app if crashes continue. Sharing the error log helps us diagnose faster."
+Q043,troubleshooting,The dashboard is not loading any data.,"Try refreshing the page and clearing the cache. If the dashboard is still blank, check your network connection and any active filters that might hide your data."
+Q044,meeting_summary,What are the action items from the meeting?,"Action items: 1) Send the revised proposal by Friday, 2) Schedule a follow-up call next week, 3) Share the onboarding docs with the team."
+Q045,meeting_summary,Can you give me a summary of the meeting?,"Here's a summary: we reviewed the project timeline, agreed on the next milestones, and assigned owners for each task. Let me know if I missed anything."
+Q046,meeting_summary,Can you summarize our meeting today?,"Here's a summary: we reviewed the project timeline, agreed on the next milestones, and assigned owners for each task. Let me know if I missed anything."
+Q047,refund,What is the refund policy for digital downloads?,Digital products can be refunded within 14 days of purchase if they have not been substantially downloaded or used.
+Q048,refund,Can I request a refund for my order from last week?,"We're sorry to hear that. Open Orders, select the order, and choose Request Refund. Refunds are processed within 5 to 7 business days."
+Q049,subscription_cancel,Please help me cancel my subscription.,You can cancel anytime under Settings > Subscription > Cancel Plan. Your access remains active until the end of the current billing period.
+Q050,subscription_cancel,How do I cancel my subscription?,You can cancel anytime under Settings > Subscription > Cancel Plan. Your access remains active until the end of the current billing period.
+Q051,troubleshooting,The app keeps crashing on startup.,"Please update to the latest version, restart your device, and reinstall the app if crashes continue. Sharing the error log helps us diagnose faster."
+Q052,onboarding,How can I invite my teammates to the workspace?,"Open Settings > Members > Invite, enter their email addresses, and assign roles. They will receive an invite link by email."
+Q053,subscription_cancel,How can I pause my subscription instead?,"Yes, you can pause your subscription for up to 3 months under Settings > Subscription > Pause. Billing stops while paused and resumes automatically."
+Q054,crm_update,Can you update the contact record for my company?,"Sure, I've updated the contact record with the new details. Please allow a few minutes for it to sync across the system."
+Q055,pricing,What is the difference between the Basic and Pro plans?,"Basic covers core features for small teams, while Pro adds advanced analytics, integrations, and priority support."
+Q056,crm_update,Can you update our company contact record?,"Sure, I've updated the contact record with the new details. Please allow a few minutes for it to sync across the system."
+Q057,onboarding,How do I get started after signing up?,"Welcome aboard! Start by completing your profile, inviting teammates, and following the in-app setup checklist to configure your workspace."
+Q058,refund,How do I request a refund for my order?,"We're sorry to hear that. Open Orders, select the order, and choose Request Refund. Refunds are processed within 5 to 7 business days."
+Q059,sales_followup,Who can follow up with me about an enterprise plan?,Absolutely. I'll have an account executive reach out within one business day to discuss enterprise options and next steps.
+Q060,billing,"I see I was charged twice this month, can you help?",It looks like a duplicate charge may have occurred. We'll review your billing history and refund any duplicate payment within 5 to 7 business days.
+Q061,subscription_cancel,I want to cancel my subscription.,You can cancel anytime under Settings > Subscription > Cancel Plan. Your access remains active until the end of the current billing period.
+Q062,subscription_cancel,Where do I cancel my subscription?,You can cancel anytime under Settings > Subscription > Cancel Plan. Your access remains active until the end of the current billing period.
+Q063,meeting_summary,Summarize what happened in the meeting.,"Here's a summary: we reviewed the project timeline, agreed on the next milestones, and assigned owners for each task. Let me know if I missed anything."
+Q064,pricing,What is the monthly cost of the Pro plan?,"The Pro plan is $29 per user per month billed monthly, or $290 per user per year when billed annually."
+Q065,sales_followup,I would like a follow up about the enterprise plan.,Absolutely. I'll have an account executive reach out within one business day to discuss enterprise options and next steps.
+Q066,account_login,Why can't I log into my account?,"Please try resetting your password with the Forgot Password link. If you still cannot log in, clear your browser cache or contact us to unlock the account."
