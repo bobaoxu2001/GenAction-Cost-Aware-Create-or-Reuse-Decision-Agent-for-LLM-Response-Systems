@@ -129,8 +129,9 @@ python -m pytest                        # 20 tests
 python scripts/run_experiments.py       # -> results/experiment_results.csv
 python scripts/make_plots.py            # -> results/*.png
 
-# 4. reproduce the ablation (threshold vs. confidence-bound policy)
+# 4. reproduce the ablation + regime study (when does optimism pay off?)
 python scripts/run_ablation.py          # -> results/ablation_*.{csv,png}
+python scripts/run_regime_study.py      # -> results/regime_*.{csv,png}  (~45s)
 
 # 5. (optional) regenerate the sample dataset
 python scripts/make_dataset.py
@@ -200,10 +201,36 @@ confidence-bound policy — the "cost of optimism" is ≈ **+0.007** avg loss
 still beat the cost-*unaware* baselines by a wide margin. The takeaway is that
 **cost-awareness is the dominant lever** on this benchmark; the LCB/UCB bonus
 mostly buys exploratory creations that don't pay off when the prior is already
-informative and feedback is near-noiseless. Optimism/learning is expected to help
-in harder regimes (noisy/ambiguous feedback, weak priors, non-stationarity) — see
-[Limitations and future work](#limitations-and-approximations). We report this
-negative result rather than tune the benchmark to favour the method.
+informative and feedback is near-noiseless. We report this negative result
+rather than tune the benchmark to favour the method — and then ask *when* the
+machinery **does** pay off, next.
+
+## When does optimism pay off? (the positive result)
+
+The ablation's easy benchmark excludes the two things the confidence-bound
+policy is built for: **hidden structure** to learn, and **enough feedback** to
+learn it. `scripts/run_regime_study.py` adds both — a latent per-action quality
+(`LossModel.quality_std`) that shifts an action's true reuse loss in a way the
+distance prior cannot predict but feedback reveals, and sustained traffic
+(replaying the stream) — then sweeps each axis (5 seeds, $c=0.20$):
+
+![When does optimism pay off?](results/regime_when_optimism_helps.png)
+
+**Positive finding.** The picture flips, and cleanly:
+
+- **Traffic (left).** With hidden structure present, a *single* pass still favours
+  the threshold (too little feedback), but from **two passes onward the
+  confidence-bound policy wins**, and the gap widens with volume
+  (avg cost ≈ 0.084 → **0.044** at 6 passes, vs. the threshold's 0.084).
+- **Hidden structure (right, 6 passes).** As the latent quality spread grows, the
+  myopic threshold — blind to feedback — **degrades** (0.056 → 0.092), while the
+  confidence-bound policy **stays robust** (≈ 0.04), because it *learns which
+  actions are secretly bad and routes around them* by creating fresh ones.
+
+So the two policies are not strictly ordered: **cost-awareness is what matters in
+the easy regime, while optimism + online learning is what matters once there is
+hidden structure and sustained traffic** — the conditions of a real, high-volume
+deployment. Characterising that boundary is the contribution here.
 
 ## Why this matters for GenAI decision systems
 
@@ -246,9 +273,12 @@ The setting combines several classic ingredients:
   cost-*aware* `StaticThreshold` ablation is the honest exception — it edges out
   the confidence-bound policy here (see the
   [ablation](#ablation-does-the-adaptive-policy-earn-its-complexity)).
-- **Optimism doesn't pay off on this (easy) benchmark.** With an informative
-  prior and near-noiseless feedback, the LCB/UCB bonus mostly adds exploratory
-  creations; its value is expected in harder regimes (below).
+- **Optimism only pays off in the right regime.** On the easy single-pass
+  benchmark (informative prior, near-noiseless feedback) the LCB/UCB bonus mostly
+  adds exploratory creations; its value appears once there is hidden structure
+  *and* sustained traffic — demonstrated in
+  [When does optimism pay off?](#when-does-optimism-pay-off-the-positive-result),
+  not yet characterised theoretically.
 - **Small, curated dataset.** ~12 FAQ + 66 stream rows, designed to make the
   coverage trade-off legible; not a benchmark.
 - **Greedy creation.** Creating uses the gold response; there is no modelling of
@@ -266,10 +296,11 @@ The setting combines several classic ingredients:
   comparator, and tuning of $\alpha, \beta$ to a target create rate.
 - Non-stationary streams (drifting intents) where past observations should be
   down-weighted over time.
-- **Pin down where optimism pays off.** Extend the [ablation](#ablation-does-the-adaptive-policy-earn-its-complexity)
-  into regimes with noisy/ambiguous reuse feedback and weakly-informative priors,
-  where the myopic `StaticThreshold` should break down and the confidence-bound
-  policy should win — turning a negative result into a positive characterisation.
+- **Where optimism pays off** is shown empirically in
+  [the regime study](#when-does-optimism-pay-off-the-positive-result) (hidden
+  per-action quality + sustained traffic); natural extensions are non-stationary
+  quality (drift), heavier-tailed feedback noise, and a *theoretical* boundary
+  for when the confidence-bound policy dominates the myopic threshold.
 
 ## Repository structure
 
@@ -286,7 +317,8 @@ genaction-create-or-reuse/
 │   ├── evaluation.py          · episode runner + metrics
 │   └── policies/              · always_create, nearest_reuse, fixed_probability,
 │                                static_threshold, doubly_optimistic
-├── scripts/                   · make_dataset, run_experiments, make_plots, run_ablation
+├── scripts/                   · make_dataset, run_experiments, make_plots,
+│                                run_ablation, run_regime_study
 ├── notebooks/                 · 01_dataset_preview, 02_run_experiments
 ├── results/                   · generated figures + summary CSV
 ├── app/streamlit_demo.py      · interactive demo

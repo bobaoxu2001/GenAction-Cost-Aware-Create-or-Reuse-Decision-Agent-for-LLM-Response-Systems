@@ -40,6 +40,7 @@ class Action:
     response_text: str
     embedding: np.ndarray
     created_round: int = -1  # -1 for seed FAQ actions
+    quality: float = 0.0  # latent quality offset (hidden from the distance prior)
 
     @property
     def is_seed(self) -> bool:
@@ -129,8 +130,13 @@ class CreateOrReuseEnv:
 
     def _build_seed_actions(self) -> list[Action]:
         embs = self.embedder.encode(list(self.faq_df["canonical_query"]))
+        # latent per-action quality for the seed library (deterministic per seed).
+        # Created actions are authored on demand and stay clean (quality 0).
+        q_rng = np.random.default_rng(self.seed + 7777)
+        qstd = self.loss_model.quality_std
         actions = []
         for row, emb in zip(self.faq_df.itertuples(index=False), embs):
+            quality = float(q_rng.normal(0.0, qstd)) if qstd > 0 else 0.0
             actions.append(
                 Action(
                     action_id=str(row.action_id),
@@ -139,6 +145,7 @@ class CreateOrReuseEnv:
                     response_text=str(row.response_text),
                     embedding=emb,
                     created_round=-1,
+                    quality=quality,
                 )
             )
         return actions
@@ -165,7 +172,7 @@ class CreateOrReuseEnv:
         # fresh copy of the seed library so episodes are independent
         self.library: list[Action] = [
             Action(a.action_id, a.category, a.canonical_query, a.response_text,
-                   a.embedding, a.created_round)
+                   a.embedding, a.created_round, a.quality)
             for a in self._seed_actions
         ]
         self.t = 0
@@ -228,6 +235,7 @@ class CreateOrReuseEnv:
                 query.embedding, query.category,
                 action.embedding, action.category,
                 self._rng,
+                action_quality=action.quality,
             )
             creation_cost = 0.0
             chosen_action_id = action.action_id

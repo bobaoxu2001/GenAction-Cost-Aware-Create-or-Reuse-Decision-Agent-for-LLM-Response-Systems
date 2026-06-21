@@ -55,12 +55,19 @@ class LossModel:
         distance ``0.3`` costs only ``0.09`` while one at ``0.9`` costs ``0.81``.
     noise_std:
         Standard deviation of zero-mean Gaussian observation noise.
+    quality_std:
+        Standard deviation of a *latent per-action quality* offset (assigned by
+        the environment, see ``CreateOrReuseEnv``). It shifts an action's reuse
+        loss in a way the distance prior cannot predict but feedback can reveal.
+        ``0.0`` (default) recovers the original distance-driven loss; larger
+        values create a regime where online learning has something to learn.
     """
 
     semantic_weight: float = 1.0
     category_penalty: float = 0.4
     distance_power: float = 2.0
     noise_std: float = 0.03
+    quality_std: float = 0.0
 
     # ------------------------------------------------------------------ #
     def semantic_term(self, query_emb: np.ndarray, action_emb: np.ndarray) -> float:
@@ -73,11 +80,13 @@ class LossModel:
         query_category: str,
         action_emb: np.ndarray,
         action_category: str,
+        action_quality: float = 0.0,
     ) -> float:
         """Deterministic (noise-free) reuse loss in ``[0, 1]``."""
         loss = self.semantic_term(query_emb, action_emb)
         if query_category != action_category:
             loss += self.category_penalty
+        loss += action_quality
         return float(np.clip(loss, 0.0, 1.0))
 
     def realized_loss(
@@ -87,16 +96,18 @@ class LossModel:
         action_emb: np.ndarray,
         action_category: str,
         rng: np.random.Generator,
+        action_quality: float = 0.0,
     ) -> tuple[float, dict]:
         """Noisy reuse loss actually incurred, plus a breakdown of components."""
         sem = self.semantic_term(query_emb, action_emb)
         cat = self.category_penalty if query_category != action_category else 0.0
         noise = float(rng.normal(0.0, self.noise_std)) if self.noise_std > 0 else 0.0
-        loss = float(np.clip(sem + cat + noise, 0.0, 1.0))
+        loss = float(np.clip(sem + cat + action_quality + noise, 0.0, 1.0))
         components = {
             "semantic_distance": semantic_distance(query_emb, action_emb),
             "semantic_term": sem,
             "category_penalty": cat,
+            "action_quality": action_quality,
             "noise": noise,
             "loss": loss,
         }

@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from genaction import Decision
+import numpy as np
+
+from genaction import CreateOrReuseEnv, Decision, Embedder, LossModel
 
 
 def test_seed_library_loaded(env):
@@ -85,3 +87,33 @@ def test_self_reuse_has_low_loss(env):
     )
     assert comps["semantic_distance"] < 1e-6
     assert loss < 0.15  # only observation noise remains
+
+
+def test_latent_quality_off_by_default(env):
+    # default LossModel has quality_std=0 -> every seed action is clean
+    assert all(a.quality == 0.0 for a in env.library)
+
+
+def test_action_quality_increases_loss():
+    lm = LossModel(noise_std=0.0)
+    e = np.array([1.0, 0.0])
+    base = lm.base_loss(e, "a", e, "a", action_quality=0.0)
+    worse = lm.base_loss(e, "a", e, "a", action_quality=0.3)
+    assert worse > base
+
+
+def test_latent_quality_assigned_to_seeds_only(faq_df, stream_df):
+    env = CreateOrReuseEnv(
+        faq_df, stream_df, Embedder(backend="tfidf"),
+        LossModel(quality_std=0.3), creation_cost=0.2, seed=0,
+    )
+    # at least one seed action carries a non-zero latent quality
+    assert any(a.quality != 0.0 for a in env.library)
+    # created actions are authored on demand and stay clean
+    env.step(Decision.create())
+    assert env.library[-1].quality == 0.0
+    # deterministic across resets
+    q_before = [a.quality for a in env.library if a.is_seed]
+    env.reset()
+    q_after = [a.quality for a in env.library if a.is_seed]
+    assert q_before == q_after

@@ -8,13 +8,17 @@ import pathlib
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 
-def _load_run_experiments():
+def _load_script(name):
     spec = importlib.util.spec_from_file_location(
-        "run_experiments", ROOT / "scripts" / "run_experiments.py"
+        name, ROOT / "scripts" / f"{name}.py"
     )
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def _load_run_experiments():
+    return _load_script("run_experiments")
 
 
 def test_run_experiment_pipeline(faq_df, stream_df):
@@ -49,3 +53,28 @@ def test_run_experiment_pipeline(faq_df, stream_df):
     do = at_cost[at_cost["policy"] == "DoublyOptimistic"]["avg_loss"].iloc[0]
     baselines = at_cost[at_cost["policy"].isin(["AlwaysCreate", "NearestReuse"])]
     assert do <= baselines["avg_loss"].min()
+
+
+def test_ablation_pipeline(faq_df, stream_df):
+    mod = _load_script("run_ablation")
+    df = mod.run_ablation(
+        faq_df, stream_df, creation_costs=[0.2], prior_powers=[2.0], backend="tfidf"
+    )
+    assert not df.empty
+    assert {"StaticThreshold", "DoublyOptimistic"}.issubset(df["policy"].unique())
+    assert df["avg_loss"].between(0.0, 1.0).all()
+
+
+def test_regime_study_pipeline(faq_df, stream_df):
+    mod = _load_script("run_regime_study")
+    df = mod.run_regime_study(
+        faq_df, stream_df, seeds=range(1),
+        traffic_reps=[1, 2], quality_levels=[0.0, 0.4], structure_reps=3,
+    )
+    assert {"traffic", "structure"}.issubset(df["study"].unique())
+    assert df["avg_loss"].between(0.0, 1.0).all()
+    # with the larger latent quality the threshold should cost at least as much
+    struct = df[df["study"] == "structure"].set_index("x")
+    hi = struct[(struct["policy"] == "StaticThreshold")].loc[0.4, "avg_loss"]
+    lo = struct[(struct["policy"] == "StaticThreshold")].loc[0.0, "avg_loss"]
+    assert hi >= lo
