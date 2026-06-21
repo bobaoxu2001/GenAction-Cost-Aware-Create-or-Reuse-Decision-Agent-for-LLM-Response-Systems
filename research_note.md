@@ -202,12 +202,44 @@ cost, and there is little hidden structure for online learning to recover. The
 lever that matters most here is plain **cost-awareness**, which both policies
 share.
 
-**When should optimism help?** Precisely where this benchmark is easy: noisy or
-ambiguous reuse feedback, weakly-informative priors (embedding distance a poor
-proxy for the true loss), and non-stationary streams where past observations must
-be down-weighted. Demonstrating that regime is the natural next step (§9); we
-report this negative result rather than tune the benchmark to favour the method.
+We report this negative result rather than tune the benchmark to favour the
+method — and then ask *when* optimism does help (§7.2).
 See `scripts/run_ablation.py` and `results/ablation_prior_sensitivity.png`.
+
+### 7.2 When optimism pays off — a positive characterisation
+
+The easy benchmark excludes the two things the confidence-bound policy is built
+for: **hidden structure** to learn and **enough feedback** to learn it.
+`scripts/run_regime_study.py` adds both — a latent per-action quality
+$q_a \sim \mathcal{N}(0, \texttt{quality\_std})$ that shifts an action's true
+reuse loss invisibly to the distance prior (applied to seed actions; created
+actions stay clean), and sustained traffic by replaying the stream — then sweeps
+each axis (5 seeds, $c=0.20$). Average total cost per query:
+
+*Traffic sweep* (hidden structure fixed, `quality_std`$=0.4$):
+
+| stream passes | 1 | 2 | 3 | 4 | 5 | 6 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| StaticThreshold | **0.144** | 0.107 | 0.095 | 0.090 | 0.086 | 0.084 |
+| DoublyOptimistic | 0.150 | **0.091** | **0.069** | **0.056** | **0.049** | **0.044** |
+
+*Structure sweep* (traffic fixed, 6 passes):
+
+| `quality_std` | 0.0 | 0.1 | 0.2 | 0.3 | 0.4 | 0.5 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| StaticThreshold | 0.056 | 0.060 | 0.068 | 0.076 | 0.084 | 0.092 |
+| DoublyOptimistic | **0.037** | **0.042** | **0.044** | **0.043** | **0.044** | **0.044** |
+
+**Positive finding.** The ordering flips, and cleanly. A *single* pass still
+favours the threshold (too little feedback), but from **two passes on the
+confidence-bound policy wins and the gap widens with volume**. And as the hidden
+quality spread grows, the feedback-blind threshold **degrades** while the
+confidence-bound policy **stays flat (≈ 0.04)** — it *learns which actions are
+secretly bad and routes around them* by creating fresh ones. So the two policies
+are not strictly ordered: **cost-awareness dominates in the easy regime; optimism
++ online learning dominates once there is hidden structure and sustained
+traffic** — the conditions of a real, high-volume deployment. (See
+`results/regime_when_optimism_helps.png`.)
 
 ## 8. Limitations
 
