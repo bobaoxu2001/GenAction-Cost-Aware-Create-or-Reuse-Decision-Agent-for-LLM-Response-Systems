@@ -76,12 +76,15 @@ reuse currently is and *how uncertain* that estimate is, relative to $c$.
 | --- | --- | --- |
 | `AlwaysCreate` | create every round | cost ceiling / quality floor |
 | `NearestReuse` | reuse $\arg\min_i d(x,a_i)$; never create | value of any creation |
-| `FixedProbability(p)` | create w.p. $p$ else reuse nearest | value of *cost-aware, targeted* creation vs. random creation at the same rate |
+| `FixedProbability(p)` | create w.p. $p$ else reuse nearest | value of *targeted* creation vs. random creation at the same rate |
+| `StaticThreshold` | create iff $d(x,a_\text{nearest})^{\gamma} > c$ | cost-aware ablation: is the LCB/UCB machinery needed at all? (§7.1) |
 | **`DoublyOptimistic`** | LCB selection + UCB creation test | the adaptive method |
 
-`FixedProbability` is the most informative baseline: it spends a comparable
-creation budget but allocates it *blindly*, so any gap to the adaptive policy
-isolates the value of deciding **where** to create, not just how often.
+`FixedProbability` is the most informative *cost-unaware* baseline: it spends a
+comparable creation budget but allocates it *blindly*, so any gap to the adaptive
+policy isolates the value of deciding **where** to create, not just how often.
+`StaticThreshold` is the *cost-aware* ablation that removes only the confidence
+bounds and the learning, isolating what those two ingredients add (§7.1).
 
 ## 5. Doubly Optimistic policy — intuition
 
@@ -170,8 +173,41 @@ Average total cost per query (lower is better):
   frontier that **dominates** `FixedProbability`: at a comparable creation
   budget it achieves a small fraction of the mismatch, confirming that deciding
   *where* to create — not just how often — is the source of the gain.
-- Robustness: it still wins with a *mis-specified* prior (`prior_power=1`), and
-  avg-loss varies by ≈0.001 across seeds.
+- Robustness: it still beats every cost-*unaware* baseline under a *mis-specified*
+  prior (`prior_power=1`), and avg-loss varies by ≈0.001 across seeds.
+
+### 7.1 Ablation — does the "doubly optimistic" machinery pay off?
+
+`StaticThreshold` is the myopic ablation of the main policy: the same cost-aware
+comparison, but **no confidence bounds and no learning** — create iff
+$d(x, a_\text{nearest})^{\text{prior\_power}} > c$. Comparing the two isolates
+the value of optimism + online learning.
+
+| prior | policy | 0.05 | 0.10 | 0.20 | 0.35 | 0.50 |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| well-specified (p=2) | StaticThreshold | 0.038 | 0.068 | 0.113 | 0.172 | 0.220 |
+| well-specified (p=2) | DoublyOptimistic | 0.050 | 0.077 | 0.123 | 0.172 | 0.221 |
+| mis-specified (p=1) | StaticThreshold | 0.039 | 0.077 | 0.140 | 0.194 | 0.222 |
+| mis-specified (p=1) | DoublyOptimistic | 0.050 | 0.082 | 0.153 | 0.215 | 0.230 |
+
+**Honest finding.** On this **stationary, low-noise, distance-informative**
+benchmark the myopic threshold is a **strong baseline that slightly beats** the
+confidence-bound policy — the "cost of optimism" is about **+0.007** average loss
+with a well-specified prior and **+0.012** when the prior is mis-specified. Both
+cost-aware policies still beat the cost-*unaware* baselines by a wide margin (§7).
+
+**Why.** When the prior is already informative and feedback is nearly noiseless,
+the LCB/UCB bonus mostly buys *exploratory creations* that do not earn back their
+cost, and there is little hidden structure for online learning to recover. The
+lever that matters most here is plain **cost-awareness**, which both policies
+share.
+
+**When should optimism help?** Precisely where this benchmark is easy: noisy or
+ambiguous reuse feedback, weakly-informative priors (embedding distance a poor
+proxy for the true loss), and non-stationary streams where past observations must
+be down-weighted. Demonstrating that regime is the natural next step (§9); we
+report this negative result rather than tune the benchmark to favour the method.
+See `scripts/run_ablation.py` and `results/ablation_prior_sensitivity.png`.
 
 ## 8. Limitations
 

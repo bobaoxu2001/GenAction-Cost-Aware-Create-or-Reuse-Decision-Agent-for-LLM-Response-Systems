@@ -23,6 +23,7 @@ from .policies import (
     FixedProbabilityPolicy,
     NearestReusePolicy,
     Policy,
+    StaticThresholdPolicy,
 )
 
 __version__ = "0.1.0"
@@ -44,5 +45,6 @@ __all__ = [
     "AlwaysCreatePolicy",
     "NearestReusePolicy",
     "FixedProbabilityPolicy",
+    "StaticThresholdPolicy",
     "DoublyOptimisticPolicy",
 ]

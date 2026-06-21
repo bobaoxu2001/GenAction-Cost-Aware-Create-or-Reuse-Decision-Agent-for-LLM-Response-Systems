@@ -5,6 +5,7 @@ from .base import Policy, nearest_index
 from .doubly_optimistic import DoublyOptimisticPolicy
 from .fixed_probability import FixedProbabilityPolicy
 from .nearest_reuse import NearestReusePolicy
+from .static_threshold import StaticThresholdPolicy
 
 __all__ = [
     "Policy",
@@ -12,5 +13,6 @@ __all__ = [
     "AlwaysCreatePolicy",
     "NearestReusePolicy",
     "FixedProbabilityPolicy",
+    "StaticThresholdPolicy",
     "DoublyOptimisticPolicy",
 ]
