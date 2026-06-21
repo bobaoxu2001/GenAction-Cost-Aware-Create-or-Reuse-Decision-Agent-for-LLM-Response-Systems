@@ -81,13 +81,14 @@ reuse. This information gap is what makes online estimation meaningful.
 
 ## Algorithm overview
 
-Four policies are implemented (see [`src/genaction/policies/`](src/genaction/policies)):
+Five policies are implemented (see [`src/genaction/policies/`](src/genaction/policies)):
 
 | Policy | Rule | Role |
 | --- | --- | --- |
 | `AlwaysCreate` | create every round | quality ceiling, cost floor-breaker (mismatch = 0, pays $c$ every round) |
 | `NearestReuse` | reuse nearest action; never create | cheap baseline; quality limited by initial coverage |
 | `FixedProbability(p)` | create w.p. $p$, else reuse nearest | **cost-unaware** stochastic foil |
+| `StaticThreshold` | create iff $d(x,a)^{\gamma} > c$ | **cost-aware** myopic baseline / ablation (no bounds, no learning) |
 | **`DoublyOptimistic`** | LCB selection + UCB creation test | the adaptive method |
 
 **The Doubly Optimistic policy.** For the current query and each action $a_i$ it
@@ -122,16 +123,19 @@ Tunable parameters: `alpha_lcb`, `beta_ucb`, `min_observations`,
 pip install -r requirements.txt        # or:  pip install -e ".[dev]"
 
 # 2. run the test suite
-python -m pytest                        # 17 tests
+python -m pytest                        # 20 tests
 
 # 3. reproduce the experiments and figures
 python scripts/run_experiments.py       # -> results/experiment_results.csv
 python scripts/make_plots.py            # -> results/*.png
 
-# 4. (optional) regenerate the sample dataset
+# 4. reproduce the ablation (threshold vs. confidence-bound policy)
+python scripts/run_ablation.py          # -> results/ablation_*.{csv,png}
+
+# 5. (optional) regenerate the sample dataset
 python scripts/make_dataset.py
 
-# 5. (optional) interactive demo
+# 6. (optional) interactive demo
 pip install streamlit
 streamlit run app/streamlit_demo.py
 ```
@@ -154,21 +158,22 @@ per query** (lower is better):
 | AlwaysCreate | 0.050 | 0.100 | 0.200 | 0.350 | 0.500 |
 | **DoublyOptimistic** | **0.050** | **0.077** | **0.123** | **0.172** | **0.221** |
 
-The adaptive policy is best at **every** creation cost. When creation is nearly
-free ($c=0.05$) it correctly behaves like `AlwaysCreate`; as creation gets
-pricier its advantage over the best baseline grows from **~23%** ($c=0.10$) to
-**~50%** ($c\geq0.35$), because it shifts from create-heavy to reuse-heavy by
-creating *only where reuse is risky*. Its create rate falls smoothly with cost
-($1.00 \to 0.76 \to 0.55 \to 0.33 \to 0.21$) while every baseline's create rate
-is flat. Results are essentially deterministic across seeds (std of avg-loss
-≈ 0.001).
+The adaptive policy is best among these policies at **every** creation cost. When
+creation is nearly free ($c=0.05$) it correctly behaves like `AlwaysCreate`; as
+creation gets pricier its advantage over the best of them grows from **~23%**
+($c=0.10$) to **~50%** ($c\geq0.35$), because it shifts from create-heavy to
+reuse-heavy by creating *only where reuse is risky*. Its create rate falls
+smoothly with cost ($1.00 \to 0.76 \to 0.55 \to 0.33 \to 0.21$) while every
+baseline's create rate is flat. Results are essentially deterministic across
+seeds (std of avg-loss ≈ 0.001). A stronger, *cost-aware* baseline — and whether
+the adaptive machinery is even needed — is examined in the [ablation](#ablation-does-the-adaptive-policy-earn-its-complexity).
 
 ## Example plots
 
 **Cost–quality trade-off (the headline figure).** Each green point is the
 adaptive policy at one creation cost; together they trace a frontier that hugs
-the lower-left (low creation effort *and* low mismatch loss), dominating every
-baseline.
+the lower-left (low creation effort *and* low mismatch loss), dominating the
+naive baselines (`AlwaysCreate`, `NearestReuse`, `FixedProbability`).
 
 ![Cost–quality trade-off](results/cost_quality_tradeoff.png)
 
@@ -177,6 +182,28 @@ baseline.
 | ![Cumulative loss](results/cumulative_loss.png) | ![Create rate by cost](results/create_rate_by_cost.png) |
 
 ![Action library growth](results/action_library_growth.png)
+
+## Ablation: does the adaptive policy earn its complexity?
+
+The first question a careful reviewer asks is whether the LCB/UCB machinery is
+needed, or whether simply thresholding the distance prior against the cost would
+do. `StaticThreshold` is exactly that myopic ablation (no confidence bounds, no
+learning). Running both across costs, under a well-specified (`prior_power=2`)
+and a mis-specified (`prior_power=1`) prior (`python scripts/run_ablation.py`):
+
+![Ablation: threshold vs. confidence-bound policy](results/ablation_prior_sensitivity.png)
+
+**Honest finding.** On this stationary, low-noise, distance-informative
+benchmark the myopic threshold is a **strong baseline that slightly beats** the
+confidence-bound policy — the "cost of optimism" is ≈ **+0.007** avg loss
+(well-specified prior) and ≈ **+0.012** (mis-specified). Both cost-aware policies
+still beat the cost-*unaware* baselines by a wide margin. The takeaway is that
+**cost-awareness is the dominant lever** on this benchmark; the LCB/UCB bonus
+mostly buys exploratory creations that don't pay off when the prior is already
+informative and feedback is near-noiseless. Optimism/learning is expected to help
+in harder regimes (noisy/ambiguous feedback, weak priors, non-stationarity) — see
+[Limitations and future work](#limitations-and-approximations). We report this
+negative result rather than tune the benchmark to favour the method.
 
 ## Why this matters for GenAI decision systems
 
@@ -213,9 +240,15 @@ The setting combines several classic ingredients:
   corpus; a fully online system would update embeddings as new text arrives.
 - **Synthetic loss model.** Mismatch loss is a calibrated proxy
   (convex distance + category penalty + noise), not human judgements. The convex
-  `prior_power` is the policy's modelling assumption; the method still beats all
-  baselines when this is mis-specified (e.g. linear, `prior_power=1`), so the
-  result is not an artefact of the policy "knowing" the loss.
+  `prior_power` is the policy's modelling assumption; the method still beats every
+  cost-*unaware* baseline when this is mis-specified (e.g. linear, `prior_power=1`),
+  so the result is not an artefact of the policy "knowing" the loss. The
+  cost-*aware* `StaticThreshold` ablation is the honest exception — it edges out
+  the confidence-bound policy here (see the
+  [ablation](#ablation-does-the-adaptive-policy-earn-its-complexity)).
+- **Optimism doesn't pay off on this (easy) benchmark.** With an informative
+  prior and near-noiseless feedback, the LCB/UCB bonus mostly adds exploratory
+  creations; its value is expected in harder regimes (below).
 - **Small, curated dataset.** ~12 FAQ + 66 stream rows, designed to make the
   coverage trade-off legible; not a benchmark.
 - **Greedy creation.** Creating uses the gold response; there is no modelling of
@@ -233,6 +266,10 @@ The setting combines several classic ingredients:
   comparator, and tuning of $\alpha, \beta$ to a target create rate.
 - Non-stationary streams (drifting intents) where past observations should be
   down-weighted over time.
+- **Pin down where optimism pays off.** Extend the [ablation](#ablation-does-the-adaptive-policy-earn-its-complexity)
+  into regimes with noisy/ambiguous reuse feedback and weakly-informative priors,
+  where the myopic `StaticThreshold` should break down and the confidence-bound
+  policy should win — turning a negative result into a positive characterisation.
 
 ## Repository structure
 
@@ -247,9 +284,9 @@ genaction-create-or-reuse/
 │   ├── environment.py         · the online create-or-reuse environment
 │   ├── loss.py                · mismatch-loss model
 │   ├── evaluation.py          · episode runner + metrics
-│   └── policies/              · always_create, nearest_reuse,
-│                                fixed_probability, doubly_optimistic
-├── scripts/                   · make_dataset, run_experiments, make_plots
+│   └── policies/              · always_create, nearest_reuse, fixed_probability,
+│                                static_threshold, doubly_optimistic
+├── scripts/                   · make_dataset, run_experiments, make_plots, run_ablation
 ├── notebooks/                 · 01_dataset_preview, 02_run_experiments
 ├── results/                   · generated figures + summary CSV
 ├── app/streamlit_demo.py      · interactive demo

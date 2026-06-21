@@ -7,6 +7,7 @@ from genaction import (
     DoublyOptimisticPolicy,
     FixedProbabilityPolicy,
     NearestReusePolicy,
+    StaticThresholdPolicy,
     run_episode,
 )
 from genaction.policies.base import nearest_index
@@ -94,3 +95,29 @@ def test_doubly_optimistic_create_rate_decreases_with_cost(env):
         res = run_episode(env, DoublyOptimisticPolicy(creation_cost=c))
         rates.append(res.summary["create_rate"])
     assert rates[0] >= rates[1] >= rates[2]
+
+
+def test_static_threshold_high_cost_never_creates(env):
+    # prior loss is at most 1, so a cost above 1 means reuse always
+    env.creation_cost = 2.0
+    res = run_episode(env, StaticThresholdPolicy(creation_cost=2.0))
+    assert res.summary["n_created"] == 0
+    assert (res.steps["kind"] == "REUSE").all()
+
+
+def test_static_threshold_create_rate_decreases_with_cost(env):
+    rates = []
+    for c in [0.05, 0.2, 0.5]:
+        env.creation_cost = c
+        res = run_episode(env, StaticThresholdPolicy(creation_cost=c))
+        rates.append(res.summary["create_rate"])
+    assert rates[0] >= rates[1] >= rates[2]
+
+
+def test_static_threshold_is_a_strong_cost_aware_baseline(env):
+    """It should beat the cost-unaware baselines at a moderate cost."""
+    env.creation_cost = 0.2
+    st = run_episode(env, StaticThresholdPolicy(creation_cost=0.2))
+    env.creation_cost = 0.2
+    nr = run_episode(env, NearestReusePolicy())
+    assert st.summary["avg_loss"] < nr.summary["avg_loss"]
