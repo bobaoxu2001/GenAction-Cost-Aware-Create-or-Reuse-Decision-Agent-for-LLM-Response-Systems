@@ -265,6 +265,63 @@ traffic** — the conditions of a real, high-volume deployment. (See
 5. **Richer creation model**: variable creation cost/quality, partial reuse
    (retrieve-then-edit), and tool/skill synthesis as the "action".
 
+## Appendix: the create-or-reuse threshold and an optimism intuition
+
+This appendix derives the decision rule the policies approximate. It is intuition,
+not a theorem — there is no regret proof (§8).
+
+**A. The myopic threshold.** Fix a round and let the best reusable action have
+*true* expected reuse loss $\mu^\star = \min_i \mathbb{E}[\ell(x, a_i)]$. Ignoring
+the future, the per-round cost of reuse is $\mu^\star$ and of creation is $c$, so
+the myopic-optimal action is
+
+$$
+\textbf{reuse if } \mu^\star \le c, \qquad \textbf{create if } \mu^\star > c .
+$$
+
+`StaticThreshold` is exactly this rule with $\mu^\star$ replaced by the prior
+$\pi_{i^\star}=d(x,a_{i^\star})^{\gamma}$ — it is optimal when the prior equals the
+true mean (well-specified, noiseless), which is why it is hard to beat on the easy
+benchmark (§7.1).
+
+**B. Why creation can beat the myopic rule (amortisation).** Creation is an
+*investment*: a new action tailored to $x$ also serves the future queries near
+$x$. Suppose a cluster of $m$ upcoming queries would each suffer reuse loss
+$\mu_{\text{old}}$ against the current library but only $\mu_{\text{new}}$ once a
+tailored action exists. Creating once (cost $c$) and reusing it thereafter beats
+always reusing the old action when
+
+$$
+c + (m-1)\,\mu_{\text{new}} \;\le\; m\,\mu_{\text{old}}
+\;\;\Longleftrightarrow\;\;
+c \;\le\; m\,(\mu_{\text{old}}-\mu_{\text{new}}) - \mu_{\text{new}} .
+$$
+
+So creation pays off when the per-query quality gain $\mu_{\text{old}}-\mu_{\text{new}}$
+is large (a genuinely novel, poorly-covered cluster) and/or the cluster recurs
+often ($m$ large) — precisely the poorly-covered, high-traffic regime where the
+adaptive policy wins (§7.2). A purely myopic threshold ($m=1$) under-creates
+relative to this; the experiments stay close because the seed FAQ already covers
+the recurring well-covered clusters.
+
+**C. The optimism layer (LCB/UCB).** The true $\mu^\star$ is unknown and learned
+from noisy feedback, so the policy keeps an estimate $\mu_i$ with a confidence
+radius $\sigma_i = \sigma_0/\sqrt{k_0+\sum_j w_{ij}}$ that shrinks as relevant
+feedback accumulates. "Optimism in the face of uncertainty" then replaces the
+point rule by its confidence-aware version:
+
+- **select** $i^\star=\arg\min_i(\mu_i-\alpha\sigma_i)$ — the loss-minimisation
+  analogue of UCB exploration (try actions that *could* be good);
+- **create iff** $\mu_{i^\star}+\beta\sigma_{i^\star} > c$ — commit to reuse only
+  when confident it beats the known price $c$.
+
+When $\sigma\to 0$ both bounds collapse to the myopic threshold (A). The gap
+between them, $(\alpha+\beta)\sigma_i$, is the *exploration budget*: it is largest
+for under-observed actions and decays like $1/\sqrt{n}$, so the extra cost of
+optimism over the oracle threshold is bounded and vanishes with feedback — at the
+price of some early exploratory creations, which is exactly the "cost of optimism"
+measured in §7.1 and recouped under sustained traffic in §7.2.
+
 ---
 
 *References (directional, not exhaustive):* online learning and the

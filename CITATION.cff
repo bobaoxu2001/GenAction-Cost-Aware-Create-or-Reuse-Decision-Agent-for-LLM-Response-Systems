@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "GenAction: A Cost-Aware Create-or-Reuse Decision Agent for LLM Response Systems"
+abstract: >-
+  A research prototype for online create-or-reuse decision making with a
+  generative (growing) action set: at each round an agent reuses a stored
+  response (cheap, risks a mismatch) or pays a fixed cost to create a new,
+  reusable response. Implements naive, cost-aware-threshold, and a
+  confidence-bound (LCB/UCB) "doubly optimistic" policy, with experiments, an
+  ablation, and a regime study characterising when optimism pays off.
+type: software
+authors:
+  # TODO: replace with your full name, e.g. given-names / family-names.
+  - name: "bobaoxu2001"
+version: "0.1.0"
+date-released: "2026-06-21"
+license: MIT
+repository-code: "https://github.com/bobaoxu2001/GenAction-Cost-Aware-Create-or-Reuse-Decision-Agent-for-LLM-Response-Systems"
+keywords:
+  - online-learning
+  - sequential-decision-making
+  - create-or-reuse
+  - generative-action-sets
+  - large-language-models
+  - cost-aware-inference

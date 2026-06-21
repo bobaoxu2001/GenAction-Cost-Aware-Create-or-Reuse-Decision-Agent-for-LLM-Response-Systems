@@ -23,6 +23,7 @@ import matplotlib
 
 matplotlib.use("Agg")  # headless / reproducible
 import matplotlib.pyplot as plt  # noqa: E402
+import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -34,6 +35,12 @@ STYLE = {
     "DoublyOptimistic": dict(color="#2ca02c", marker="o"),
 }
 FIXED_COLORS = ["#ff7f0e", "#9467bd", "#8c564b", "#e377c2"]
+
+# category coverage groups (must match the dataset design in make_dataset.py)
+WELL_COVERED = ["billing", "refund", "account_login", "troubleshooting",
+                "pricing", "onboarding"]
+POORLY_COVERED = ["subscription_cancel", "sales_followup", "crm_update",
+                  "meeting_summary"]
 
 
 def _style_for(policy: str, fixed_idx: dict) -> dict:
@@ -146,6 +153,55 @@ def plot_action_library_growth(traj: pd.DataFrame, out: pathlib.Path,
     plt.close(fig)
 
 
+def plot_create_rate_by_category(traj: pd.DataFrame, out: pathlib.Path,
+                                 cost: float) -> None:
+    """Mechanism diagnostic: *where* each policy spends its creation budget.
+
+    The adaptive policy should concentrate creation on the poorly-covered
+    categories (which have no seed FAQ) and mostly reuse for the well-covered
+    ones, whereas the fixed-probability policy creates uniformly regardless of
+    coverage. This is direct evidence of targeting, not just better aggregates.
+    """
+    sub = traj[traj["cost_setting"] == cost]
+    order = WELL_COVERED + POORLY_COVERED
+    series = {
+        "FixedProb(p=0.5)": "#9467bd",
+        "DoublyOptimistic": "#2ca02c",
+    }
+    rates = {}
+    for pol in series:
+        d = sub[sub["policy"] == pol]
+        cr = d.assign(c=(d["kind"] == "CREATE")).groupby("category")["c"].mean()
+        rates[pol] = [float(cr.get(cat, 0.0)) for cat in order]
+
+    y = np.arange(len(order))
+    h = 0.38
+    fig, ax = plt.subplots(figsize=(8.5, 6.2))
+    ax.barh(y - h / 2, rates["DoublyOptimistic"], height=h,
+            color=series["DoublyOptimistic"], label="DoublyOptimistic")
+    ax.barh(y + h / 2, rates["FixedProb(p=0.5)"], height=h,
+            color=series["FixedProb(p=0.5)"], label="FixedProb(p=0.5)")
+    ax.set_yticks(y)
+    ax.set_yticklabels(order)
+    ax.invert_yaxis()  # first category at the top
+    # shade + label the poorly-covered band
+    ax.axhspan(len(WELL_COVERED) - 0.5, len(order) - 0.5,
+               color="#ffe8a3", alpha=0.45, zorder=0)
+    ax.text(0.99, (len(WELL_COVERED) + len(order) - 1) / 2,
+            "poorly-covered\n(no seed FAQ)", transform=ax.get_yaxis_transform(),
+            ha="right", va="center", fontsize=9, color="#9a7d0a")
+    ax.text(0.99, (len(WELL_COVERED) - 1) / 2, "well-covered\n(FAQ exists)",
+            transform=ax.get_yaxis_transform(), ha="right", va="center",
+            fontsize=9, color="gray")
+    ax.set_xlabel("Create rate  (fraction of that category's queries that create)")
+    ax.set_xlim(0, 1.0)
+    ax.set_title(f"Where each policy spends its creation budget  (creation cost = {cost:g})")
+    ax.legend(loc="lower right", fontsize=9)
+    fig.tight_layout()
+    fig.savefig(out, dpi=150)
+    plt.close(fig)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--results-dir", default=str(ROOT / "results"))
@@ -160,6 +216,8 @@ def main() -> None:
     ref = args.reference_cost
     if ref not in set(summary["creation_cost"]):
         ref = float(summary["creation_cost"].median())
+    # the targeting mechanism is clearest at the highest cost (most selective)
+    high = float(summary["creation_cost"].max())
 
     plots = {
         "cost_quality_tradeoff.png":
@@ -170,6 +228,8 @@ def main() -> None:
             lambda p: plot_create_rate_by_cost(summary, p),
         "action_library_growth.png":
             lambda p: plot_action_library_growth(traj, p, ref),
+        "create_rate_by_category.png":
+            lambda p: plot_create_rate_by_category(traj, p, high),
     }
     for name, fn in plots.items():
         path = results_dir / name
