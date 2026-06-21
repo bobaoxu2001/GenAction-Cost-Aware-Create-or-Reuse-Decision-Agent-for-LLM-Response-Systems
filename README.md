@@ -118,25 +118,27 @@ Tunable parameters: `alpha_lcb`, `beta_ucb`, `min_observations`,
 
 ## How to run
 
+Everything below is a `make` target — `make all` runs the tests and reproduces
+every result and figure end-to-end.
+
 ```bash
 # 1. install core dependencies (offline-friendly; no API keys)
-pip install -r requirements.txt        # or:  pip install -e ".[dev]"
+pip install -r requirements.txt        # or:  pip install -e ".[dev]"  /  make setup
 
-# 2. run the test suite
-python -m pytest                        # 20 tests
+# 2. one command: tests + all experiments + all figures
+make all
 
-# 3. reproduce the experiments and figures
-python scripts/run_experiments.py       # -> results/experiment_results.csv
-python scripts/make_plots.py            # -> results/*.png
+# ...or run the pieces individually:
+python -m pytest                        # 26 tests                     (make test)
+python scripts/run_experiments.py       # -> results/experiment_results.csv  (make experiments)
+python scripts/make_plots.py            # -> results/*.png             (make plots)
+python scripts/run_ablation.py          # -> results/ablation_*        (make ablation)
+python scripts/run_regime_study.py      # -> results/regime_*  (~45s)  (make regime)
 
-# 4. reproduce the ablation + regime study (when does optimism pay off?)
-python scripts/run_ablation.py          # -> results/ablation_*.{csv,png}
-python scripts/run_regime_study.py      # -> results/regime_*.{csv,png}  (~45s)
-
-# 5. (optional) regenerate the sample dataset
+# 3. (optional) regenerate the sample dataset
 python scripts/make_dataset.py
 
-# 6. (optional) interactive demo
+# 4. (optional) interactive demo
 pip install streamlit
 streamlit run app/streamlit_demo.py
 ```
@@ -183,6 +185,15 @@ naive baselines (`AlwaysCreate`, `NearestReuse`, `FixedProbability`).
 | ![Cumulative loss](results/cumulative_loss.png) | ![Create rate by cost](results/create_rate_by_cost.png) |
 
 ![Action library growth](results/action_library_growth.png)
+
+**Mechanism — *where* the budget is spent.** Aggregate wins are more convincing
+with evidence of *why*. At a high creation cost the adaptive policy concentrates
+creation on the **poorly-covered** categories (which have no seed FAQ) and barely
+creates for **well-covered** ones — it creates **zero** new actions for `refund`,
+`account_login`, and `pricing`, reusing their FAQs — whereas `FixedProbability`
+creates uniformly, blind to coverage.
+
+![Where each policy spends its creation budget](results/create_rate_by_category.png)
 
 ## Ablation: does the adaptive policy earn its complexity?
 
@@ -307,22 +318,23 @@ The setting combines several classic ingredients:
 ```
 genaction-create-or-reuse/
 ├── README.md                  · this file
-├── research_note.md           · the theory intuition write-up
-├── requirements.txt           · pyproject.toml
+├── research_note.md           · theory intuition + derivation appendix
+├── Makefile                   · make all / test / figures / ...
+├── requirements.txt · pyproject.toml · CITATION.cff · LICENSE
 ├── data/                      · sample_faq_library.csv, sample_stream.csv
 ├── src/genaction/
 │   ├── embeddings.py          · sentence-transformers / TF-IDF backends
 │   ├── environment.py         · the online create-or-reuse environment
-│   ├── loss.py                · mismatch-loss model
+│   ├── loss.py                · mismatch-loss model (+ latent action quality)
 │   ├── evaluation.py          · episode runner + metrics
 │   └── policies/              · always_create, nearest_reuse, fixed_probability,
 │                                static_threshold, doubly_optimistic
 ├── scripts/                   · make_dataset, run_experiments, make_plots,
 │                                run_ablation, run_regime_study
 ├── notebooks/                 · 01_dataset_preview, 02_run_experiments
-├── results/                   · generated figures + summary CSV
+├── results/                   · 6 generated figures + summary CSVs
 ├── app/streamlit_demo.py      · interactive demo
-└── tests/                     · environment + policy + pipeline tests
+└── tests/                     · environment + policy + pipeline tests (26)
 ```
 
 ## License

@@ -5,6 +5,8 @@ from __future__ import annotations
 import importlib.util
 import pathlib
 
+import pandas as pd
+
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 
@@ -53,6 +55,16 @@ def test_run_experiment_pipeline(faq_df, stream_df):
     do = at_cost[at_cost["policy"] == "DoublyOptimistic"]["avg_loss"].iloc[0]
     baselines = at_cost[at_cost["policy"].isin(["AlwaysCreate", "NearestReuse"])]
     assert do <= baselines["avg_loss"].min()
+
+
+def test_experiment_is_reproducible(faq_df, stream_df):
+    """Same seed -> identical results (reproducibility guarantee)."""
+    mod = _load_run_experiments()
+    s1, _ = mod.run_experiment(faq_df, stream_df, creation_costs=[0.2],
+                               fixed_probs=[0.3], seed=0)
+    s2, _ = mod.run_experiment(faq_df, stream_df, creation_costs=[0.2],
+                               fixed_probs=[0.3], seed=0)
+    pd.testing.assert_frame_equal(s1, s2)
 
 
 def test_ablation_pipeline(faq_df, stream_df):
